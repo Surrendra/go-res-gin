@@ -25,6 +25,8 @@ func main() {
 			product.DELETE("delete/:code", productcontroller.Delete)
 		}
 
+		// besok lanjut pasang middleware
+
 		user := v1.Group("/user")
 		{
 			UuidHelper := helpers.NewUuidHelper()
