@@ -29,7 +29,11 @@ func NewUserHandler(uuid helpers.UuidHelper, filesystem helpers.FileSystemHelper
 func (h UserHandler) GetAllUser(c *gin.Context) {
 	var users []models.User
 	models.DB.Find(&users)
-	resHelper.ResponseSuccess(c, users, "Success")
+
+	//fmt.Println(authName)
+	authName, _ := c.Get("authName")
+
+	resHelper.ResponseSuccess(c, users, "Success get data from user "+authName.(string))
 }
 
 func (h UserHandler) Create(c *gin.Context) {

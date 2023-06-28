@@ -27,20 +27,24 @@ func main() {
 
 		// besok lanjut pasang middleware
 
+		// group by middleware
+
+		jwtMiddleware := middlewares.NewJwtMiddleware()
 		user := v1.Group("/user")
 		{
 			UuidHelper := helpers.NewUuidHelper()
 			filesystemHelper := helpers.NewFileSystemHelper()
-			jwtMiddleware := middlewares.NewJwtMiddleware()
 			userHandler := handlers.NewUserHandler(UuidHelper, filesystemHelper, jwtMiddleware)
-			user.GET("get_data", userHandler.GetAllUser)
-			user.GET("find/:code", userHandler.FindByCode)
 			user.POST("create", userHandler.Create)
+			user.Use(jwtMiddleware.AuthMiddleware)
+			user.GET("get_data", jwtMiddleware.AuthMiddleware, userHandler.GetAllUser)
+			user.GET("find/:code", userHandler.FindByCode)
 			user.PUT("update/:code", usercontroller.Update)
 			user.POST("login", usercontroller.Login)
 			user.PUT("update_profile_picture/:code", userHandler.UpdateProfilePicture)
 			user.POST("check_payload", userHandler.CheckPayload)
 		}
+
 	}
 	r.Run()
 }

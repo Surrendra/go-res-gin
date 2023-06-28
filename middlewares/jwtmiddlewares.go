@@ -3,8 +3,10 @@ package middlewares
 import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/go-res-gin/models"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,6 +25,7 @@ func (h jwtMiddleware) GenerateJWTToken(user models.User) (string, error) {
 	var claims = jwt.MapClaims{
 		"id":    user.Id,
 		"code":  user.Code,
+		"name":  user.Name,
 		"email": user.Email,
 		"phone": user.Phone,
 		"exp":   time.Now().Add(time.Hour * 34).Unix(),
@@ -39,4 +42,46 @@ func (h jwtMiddleware) GenerateJWTToken(user models.User) (string, error) {
 		return "", err
 	}
 	return signToken, nil
+}
+
+func (h jwtMiddleware) AuthMiddleware(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.AbortWithStatusJSON(401, gin.H{
+			"message": "Unauthorized | token not provided",
+		})
+		return
+	}
+
+	// get token after bearer
+	tokenString = strings.Split(tokenString, " ")[1]
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SIGNATURE_KEY")), nil
+	})
+	if err != nil {
+		c.AbortWithStatusJSON(401, gin.H{
+			"message": "Unauthorized | token not valid",
+		})
+		return
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		//fmt.Println(claims)
+		// set claims user id
+		c.Set("authId", claims["id"])
+		c.Set("authCode", claims["code"])
+		c.Set("authName", claims["name"])
+		c.Set("authEmail", claims["email"])
+		c.Set("authPhone", claims["phone"])
+
+		// get from c handler
+
+		c.Next()
+	} else {
+		c.AbortWithStatusJSON(401, gin.H{
+			"message": "Unauthorized",
+		})
+		return
+	}
 }
