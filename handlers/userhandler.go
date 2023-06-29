@@ -146,8 +146,6 @@ func (h UserHandler) CheckPayloadWithObject(c *gin.Context) {
 		} `json:"items"`
 	}
 
-	for
-
 	var payload Payload
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		fmt.Println(err)

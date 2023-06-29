@@ -13,23 +13,32 @@ import (
 func main() {
 	r := gin.Default()
 	models.ConnectDatabase()
-
+	jwtMiddleware := middlewares.NewJwtMiddleware()
 	v1 := r.Group("/api")
 	{
+		transaction := v1.Group("transaction")
+		{
+
+			transactionHandler := handlers.NewTransactionHandler(jwtMiddleware)
+			transaction.Use(jwtMiddleware.AuthMiddleware)
+			transaction.GET("/get_data", transactionHandler.GetData)
+			transaction.POST("create", transactionHandler.Create)
+		}
 		product := v1.Group("/product")
 		{
+			product.Use(jwtMiddleware.AuthMiddleware)
 			product.GET("get_data", productcontroller.GetAllData)
 			product.GET("find/:code", productcontroller.FindByCode)
 			product.POST("create", productcontroller.Create)
 			product.PUT("update/:code", productcontroller.Update)
 			product.DELETE("delete/:code", productcontroller.Delete)
+
 		}
 
 		// besok lanjut pasang middleware
 
 		// group by middleware
 
-		jwtMiddleware := middlewares.NewJwtMiddleware()
 		user := v1.Group("/user")
 		{
 			UuidHelper := helpers.NewUuidHelper()

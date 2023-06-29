@@ -19,6 +19,16 @@ func NewJwtMiddleware() *jwtMiddleware {
 
 type JwtMiddleware interface {
 	GenerateJWTToken(user models.User) (string, error)
+	GetAuthUser(c *gin.Context) (models.User, error)
+}
+
+func (h jwtMiddleware) GetAuthUser(c *gin.Context) (models.User, error) {
+	// select user by id
+	var user models.User
+	var authId, _ = c.Get("authId")
+	fmt.Println(authId)
+	models.DB.Where("id = ?", authId).First(&user)
+	return user, nil
 }
 
 func (h jwtMiddleware) GenerateJWTToken(user models.User) (string, error) {
@@ -67,7 +77,6 @@ func (h jwtMiddleware) AuthMiddleware(c *gin.Context) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		//fmt.Println(claims)
 		// set claims user id
 		c.Set("authId", claims["id"])
 		c.Set("authCode", claims["code"])
@@ -75,8 +84,6 @@ func (h jwtMiddleware) AuthMiddleware(c *gin.Context) {
 		c.Set("authEmail", claims["email"])
 		c.Set("authPhone", claims["phone"])
 		c.Set("auth", claims)
-
-		// get from c handler
 
 		c.Next()
 	} else {
