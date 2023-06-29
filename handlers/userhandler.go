@@ -127,3 +127,53 @@ func (h UserHandler) CheckPayload(c *gin.Context) {
 	var Result = Payload.FirstNumber + Payload.SecondNumber
 	fmt.Println(Result)
 }
+
+func (h UserHandler) CheckPayloadWithObject(c *gin.Context) {
+	type Payload struct {
+		CustomerName string `json:"customer_name"`
+		PackageID    int    `json:"package_id"`
+		PackageName  string `json:"package_name"`
+		Place        string `json:"place"`
+		Items        []struct {
+			ItemID   int    `json:"item_id"`
+			ItemName string `json:"item_name"`
+			Qty      int    `json:"qty"`
+			Price    int    `json:"price"`
+			Subtotal int
+			Optional struct {
+				WithSpoon bool `json:"with_spoon"`
+			} `json:"optional"`
+		} `json:"items"`
+	}
+
+	for
+
+	var payload Payload
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		fmt.Println(err)
+		resHelper.ResponseFailed(c, err, "Failed binding json request")
+		return
+	}
+	// foreach items in payload
+	var subTotal int
+	var totalTransaction int = 0
+	for _, item := range payload.Items {
+		subTotal = item.Qty * item.Price
+		totalTransaction += subTotal
+		//fmt.Println(item.ItemName)
+		//fmt.Println(item.Qty)
+		//fmt.Println(item.Price)
+		//fmt.Println(item.Optional.WithSpoon)
+	}
+	authName, _ := c.Get("authName")
+	authId, _ := c.Get("authId")
+	//auth, _ := c.Get("auth")
+	// print message to console
+	fmt.Printf("var1 = %T\n", authId)
+	fmt.Printf("var1 = %T\n", authName)
+
+	fmt.Println("Auth Name: ", authName)
+	//fmt.Println("Auth ID: " + authId)
+	resHelper.ResponseSuccess(c, payload, "Success get data from payload")
+
+}

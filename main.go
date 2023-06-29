@@ -43,6 +43,7 @@ func main() {
 			user.POST("login", usercontroller.Login)
 			user.PUT("update_profile_picture/:code", userHandler.UpdateProfilePicture)
 			user.POST("check_payload", userHandler.CheckPayload)
+			user.POST("check_payload_with_object", userHandler.CheckPayloadWithObject)
 		}
 
 	}

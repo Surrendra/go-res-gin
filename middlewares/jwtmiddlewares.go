@@ -74,6 +74,7 @@ func (h jwtMiddleware) AuthMiddleware(c *gin.Context) {
 		c.Set("authName", claims["name"])
 		c.Set("authEmail", claims["email"])
 		c.Set("authPhone", claims["phone"])
+		c.Set("auth", claims)
 
 		// get from c handler
 

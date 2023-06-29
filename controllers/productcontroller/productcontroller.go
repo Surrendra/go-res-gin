@@ -118,7 +118,6 @@ func Delete(c *gin.Context ){
 
 	// concat string in go
 
-
 	c.JSON(http.StatusOK, gin.H{
 		"data": product,
 		"message": "Data "+product.Name+" has been deleted",
