@@ -7,6 +7,7 @@ import (
 	"github.com/go-res-gin/middlewares"
 	"github.com/go-res-gin/models"
 	"github.com/google/uuid"
+	"time"
 )
 
 var ResHelper = helpers.NewResHelper()
@@ -46,33 +47,41 @@ func (h TransactionHandler) Create(c *gin.Context) {
 
 	authUser, _ := h.JwtMiddleware.GetAuthUser(c)
 
-	transactionModel := models.Transaction{
-		Code:          uuid.New().String(),
-		CustomerName:  transactionRequest.CustomerName,
-		CreatedUserID: authUser.Id,
+	Transaction := models.Transaction{
+		Code:            uuid.New().String(),
+		CustomerName:    transactionRequest.CustomerName,
+		TransactionDate: time.Now().Format("2006-01-02"),
+		CreatedUserID:   authUser.Id,
 	}
 
-	models.DB.Create(&transactionModel)
+	models.DB.Create(&Transaction)
 	var grandTotal int64 = 0
+	var product models.Product
 	for _, item := range transactionRequest.Items {
 		subTotal := item.Qty * item.ProductPrice
 		grandTotal += subTotal
 
+		// clean product models to re select
+		product = models.Product{}
+		models.DB.Where("id = ?", item.ProductID).Find(&product)
+
 		transactionProduct := models.TransactionProduct{
-			TransactionId: transactionModel.Id,
+			TransactionId: Transaction.Id,
 			ProductId:     item.ProductID,
-			ProductName:   item.ProductName,
+			ProductName:   product.Name,
 			Quantity:      item.Qty,
 			ProductPrice:  item.ProductPrice,
 			SubTotal:      subTotal,
 		}
 		models.DB.Create(&transactionProduct)
-		// index is the index where we are
-		// element is the element from someSlice for where we are
 	}
 
 	// update total price from grand total to transactionModel
-	transactionModel.TotalPrice = grandTotal
-	models.DB.Save(&transactionModel)
-	resHelper.ResponseSuccess(c, transactionModel, "Success create transaction")
+	Transaction.TotalPrice = grandTotal
+	models.DB.Save(&Transaction)
+
+	// select transaction with CreatedUser and TransactionProduct relations
+	models.DB.Preload("CreatedUser").Preload("TransactionProducts").Find(&Transaction, Transaction.Id)
+
+	resHelper.ResponseSuccess(c, Transaction, "Success create transaction")
 }
